@@ -11,6 +11,7 @@ import com.example.myapp.model.User
 import com.example.myapp.screens.HomeScreen
 import com.example.myapp.screens.LoginScreen
 import com.example.myapp.screens.ProfileScreen
+import com.example.myapp.screens.SearchScreen
 
 
 @Composable
@@ -77,6 +78,23 @@ fun NavGraph() {
             )
         }
 
+        //SearchScreen route
+        composable<Screen.Search> {
+            SearchScreen(
+                onBack = { navController.popBackStack() },
+                onHomeClick = {
+                    navController.navigate(Screen.Home) {
+                        popUpTo<Screen.Home> { inclusive = true }
+                    }
+                },
+                onSearchClick = { },
+                onAlbumClick = {
+                    navController.navigate(Screen.Album) {
+                        popUpTo<Screen.Home>()
+                    }
+                }
+            )
+        }
 
     }
 }
