@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.myapp.model.AlbumItem
 import com.example.myapp.model.User
+import com.example.myapp.screens.AlbumScreen
 import com.example.myapp.screens.HomeScreen
 import com.example.myapp.screens.LoginScreen
 import com.example.myapp.screens.ProfileScreen
@@ -92,6 +93,32 @@ fun NavGraph() {
                     navController.navigate(Screen.Album) {
                         popUpTo<Screen.Home>()
                     }
+                }
+            )
+        }
+        //AlbumScreen route
+        composable<Screen.Album> {
+            AlbumScreen(
+                albumItems = albumItems,
+                onBack = { navController.popBackStack() },
+                onHomeClick = {
+                    navController.navigate(Screen.Home) {
+                        popUpTo<Screen.Home> { inclusive = true }
+                    }
+                },
+                onSearchClick = {
+                    navController.navigate(Screen.Search) {
+                        popUpTo<Screen.Home>()
+                    }
+                },
+                onAlbumClick = { },
+                onAlbumDetailClick = {
+                    navController.navigate(Screen.AlbumDetail)
+                },
+                onAlbumItemClick = { item ->
+                    navController.navigate(
+                        Screen.AlbumItemDetail(item.id, item.title)
+                    )
                 }
             )
         }
