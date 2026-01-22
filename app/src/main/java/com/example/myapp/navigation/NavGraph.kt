@@ -12,6 +12,7 @@ import com.example.myapp.model.User
 import com.example.myapp.screens.AlbumDetailScreen
 import com.example.myapp.screens.AlbumItemDetailScreen
 import com.example.myapp.screens.AlbumScreen
+import com.example.myapp.screens.CardDetailScreen
 import com.example.myapp.screens.HomeScreen
 import com.example.myapp.screens.LoginScreen
 import com.example.myapp.screens.ProfileScreen
@@ -146,6 +147,17 @@ fun NavGraph() {
 
             AlbumItemDetailScreen(
                 item = item,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        //
+        composable<Screen.CardDetail> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.CardDetail>()
+
+            CardDetailScreen(
+                cardId = args.cardId,
+                cardTitle = args.cardTitle,
                 onBack = { navController.popBackStack() }
             )
         }
