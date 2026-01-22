@@ -10,6 +10,7 @@ import com.example.myapp.model.AlbumItem
 import com.example.myapp.model.User
 import com.example.myapp.screens.HomeScreen
 import com.example.myapp.screens.LoginScreen
+import com.example.myapp.screens.ProfileScreen
 
 
 @Composable
@@ -67,6 +68,15 @@ fun NavGraph() {
                 }
             )
         }
+
+        //ProfileScreen route
+        composable<Screen.Profile> {
+            ProfileScreen(
+                user = currentUser.value,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
 
     }
 }
