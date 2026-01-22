@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.myapp.model.AlbumItem
 import com.example.myapp.model.User
+import com.example.myapp.screens.HomeScreen
 import com.example.myapp.screens.LoginScreen
 
 
@@ -41,6 +42,28 @@ fun NavGraph() {
                     navController.navigate(Screen.Home) {
                         popUpTo<Screen.Login> { inclusive = true }
                     }
+                }
+            )
+        }
+
+        //HomeScreen route
+        composable<Screen.Home> {
+            HomeScreen(
+                username = currentUser.value?.username ?: "User",
+                onProfileClick = {
+                    navController.navigate(Screen.Profile)
+                },
+                onHomeClick = { },
+                onSearchClick = {
+                    navController.navigate(Screen.Search)
+                },
+                onAlbumClick = {
+                    navController.navigate(Screen.Album)
+                },
+                onCardClick = { cardId, cardTitle ->
+                    navController.navigate(
+                        Screen.CardDetail(cardId, cardTitle)
+                    )
                 }
             )
         }
