@@ -6,8 +6,11 @@ import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.myapp.model.AlbumItem
 import com.example.myapp.model.User
+import com.example.myapp.screens.AlbumDetailScreen
+import com.example.myapp.screens.AlbumItemDetailScreen
 import com.example.myapp.screens.AlbumScreen
 import com.example.myapp.screens.HomeScreen
 import com.example.myapp.screens.LoginScreen
@@ -122,6 +125,31 @@ fun NavGraph() {
                 }
             )
         }
+
+        //AlbumDetailScreen route
+        composable<Screen.AlbumDetail> {
+            AlbumDetailScreen(
+                items = albumItems,
+                onBack = { navController.popBackStack() },
+                onItemClick = { item ->
+                    navController.navigate(
+                        Screen.AlbumItemDetail(item.id, item.title)
+                    )
+                }
+            )
+        }
+
+        //AlbumItemDetailScreen route
+        composable<Screen.AlbumItemDetail> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.AlbumItemDetail>()
+            val item = albumItems.find { it.id == args.itemId }
+
+            AlbumItemDetailScreen(
+                item = item,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
 
     }
 }
