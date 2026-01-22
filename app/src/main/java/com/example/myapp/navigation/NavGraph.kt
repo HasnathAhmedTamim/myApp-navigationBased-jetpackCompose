@@ -4,9 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.myapp.model.AlbumItem
 import com.example.myapp.model.User
+import com.example.myapp.screens.LoginScreen
 
 
 @Composable
@@ -27,7 +29,21 @@ fun NavGraph() {
         navController = navController,
         startDestination = Screen.Login
     ){
-
+        // LoginScreen route
+        composable<Screen.Login> {
+            LoginScreen(
+                onLoginSuccess = { username, password ->
+                    currentUser.value = User(
+                        username = username,
+                        email = "$username@example.com",
+                        phone = "01712345678"
+                    )
+                    navController.navigate(Screen.Home) {
+                        popUpTo<Screen.Login> { inclusive = true }
+                    }
+                }
+            )
+        }
 
     }
 }
