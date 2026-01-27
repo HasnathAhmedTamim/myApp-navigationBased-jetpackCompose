@@ -75,8 +75,8 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp , Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(16.dp , Alignment.CenterVertically)
         ){
             items(4) { index ->
                 Card(

@@ -32,3 +32,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+@Preview(showBackground = true , showSystemUi = true, name = "App Preview")
+@Composable
+fun AppPreview() {
+    MyAppTheme {
+        NavGraph()
+    }
+}

@@ -44,7 +44,7 @@ fun NavGraph() {
                     currentUser.value = User(
                         username = username,
                         email = "$username@example.com",
-                        phone = "01712345678"
+                        phone = "017********"
                     )
                     navController.navigate(Screen.Home) {
                         popUpTo<Screen.Login> { inclusive = true }
