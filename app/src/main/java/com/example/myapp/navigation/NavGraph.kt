@@ -86,25 +86,20 @@ fun NavGraph() {
         //SearchScreen route
         composable<Screen.Search> {
             SearchScreen(
-                onBack = { navController.popBackStack() },
-                onHomeClick = {
-                    navController.navigate(Screen.Home) {
-                        popUpTo<Screen.Home> { inclusive = true }
-                    }
-                },
+                username = currentUser.value?.username ?: "User",
+                onProfileClick = { navController.navigate(Screen.Profile) },
+                onHomeClick = { navController.navigate(Screen.Home) { popUpTo<Screen.Home> { inclusive = true } } },
                 onSearchClick = { },
-                onAlbumClick = {
-                    navController.navigate(Screen.Album) {
-                        popUpTo<Screen.Home>()
-                    }
-                }
+                onAlbumClick = { navController.navigate(Screen.Album) { popUpTo<Screen.Home>() } },
+                onCardClick = { cardId, cardTitle -> navController.navigate(Screen.CardDetail(cardId, cardTitle)) }
             )
+
         }
         //AlbumScreen route
         composable<Screen.Album> {
             AlbumScreen(
                 albumItems = albumItems,
-                onBack = { navController.popBackStack() },
+                onBack = { navController.popBackStack() },  // Kept for compatibility
                 onHomeClick = {
                     navController.navigate(Screen.Home) {
                         popUpTo<Screen.Home> { inclusive = true }
@@ -115,7 +110,7 @@ fun NavGraph() {
                         popUpTo<Screen.Home>()
                     }
                 },
-                onAlbumClick = { },
+                onAlbumClick = { }, // Stay on current screen
                 onAlbumDetailClick = {
                     navController.navigate(Screen.AlbumDetail)
                 },
@@ -123,9 +118,13 @@ fun NavGraph() {
                     navController.navigate(
                         Screen.AlbumItemDetail(item.id, item.title)
                     )
+                },
+                onProfileClick = {                           // ✅ Add this
+                    navController.navigate(Screen.Profile)
                 }
             )
         }
+
 
         //AlbumDetailScreen route
         composable<Screen.AlbumDetail> {
