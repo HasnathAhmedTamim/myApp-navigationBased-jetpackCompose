@@ -1,75 +1,150 @@
 package com.example.myapp.screens
 
-
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
+/**
+ * Login Screen
+ *
+ * Entry point of the application.
+ * Allows user to login with username and password.
+ *
+ * @param onLoginSuccess Callback when login is successful (username, password)
+ */
 @Composable
 fun LoginScreen(
     onLoginSuccess: (String, String) -> Unit
-){
-    //    Todo
+) {
+    // ========================================
+    // STATE
+    // ========================================
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }  // ✅ Toggle visibility
+    var isLoading by remember { mutableStateOf(false) }  // ✅ Loading state
+    var errorMessage by remember { mutableStateOf("") }  // ✅ Error handling
 
+    // ========================================
+    // UI
+    // ========================================
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        //Display Login Title
-        Text("Login", style = MaterialTheme.typography.headlineLarge)
+    ) {
+
+        // Title
+        Text(
+            text = "Welcome Back",
+            style = MaterialTheme.typography.headlineLarge
+        )
+        Text(
+            text = "Login to continue",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
 
-        //Display Username TextField
+        // Username Field
         OutlinedTextField(
             value = username,
-            onValueChange = { username = it },
+            onValueChange = {
+                username = it
+                errorMessage = ""  // Clear error on input
+            },
             label = { Text("Username") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,  // ✅ Single line input
+            isError = errorMessage.isNotEmpty()  // ✅ Show error state
         )
+
         Spacer(modifier = Modifier.height(16.dp))
 
-        //Display Password TextField
+        // Password Field with Toggle
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                errorMessage = ""  // Clear error on input
+            },
             label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        //Simulate Login Button Click
-        Button(
-            onClick = {
-                if (username.isNotEmpty() && password.isNotEmpty()) {
-                    onLoginSuccess(username, password)
+            visualTransformation = if (passwordVisible)
+                VisualTransformation.None
+            else
+                PasswordVisualTransformation(),
+            trailingIcon = {  // ✅ Eye icon to toggle
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible)
+                            Icons.Filled.Visibility
+                        else
+                            Icons.Filled.VisibilityOff,
+                        contentDescription = if (passwordVisible)
+                            "Hide password"
+                        else
+                            "Show password"
+                    )
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            isError = errorMessage.isNotEmpty()
+        )
+
+        // Error Message
+        if (errorMessage.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Login Button
+        Button(
+            onClick = {
+                when {
+                    username.isEmpty() -> {
+                        errorMessage = "Please enter username"
+                    }
+                    password.isEmpty() -> {
+                        errorMessage = "Please enter password"
+                    }
+                    password.length < 4 -> {  // ✅ Minimum length
+                        errorMessage = "Password must be at least 4 characters"
+                    }
+                    else -> {
+                        isLoading = true
+                        onLoginSuccess(username, password)
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading  // ✅ Disable during loading
         ) {
-            Text("Login")
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Text("Login")
+            }
         }
     }
 }
