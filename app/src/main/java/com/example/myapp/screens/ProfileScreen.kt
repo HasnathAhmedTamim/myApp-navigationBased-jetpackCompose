@@ -3,10 +3,13 @@ package com.example.myapp.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.myapp.components.AppTopBar
 import com.example.myapp.model.User
+import com.example.myapp.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
 
 /**
  * Profile Screen
@@ -18,8 +21,11 @@ import com.example.myapp.model.User
 @Composable
 fun ProfileScreen(
     user: User?,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: AuthViewModel,
+    onLogout: () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             AppTopBar(
@@ -58,6 +64,18 @@ fun ProfileScreen(
                 }
             } else {
                 Text("No user data available")
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        viewModel.logout()
+                        onLogout()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Logout")
             }
         }
     }

@@ -39,4 +39,16 @@ sealed interface Screen {
         val cardId: String,
         val cardTitle: String
     ) : Screen
+
+    @Serializable
+    data object Signup : Screen
+
+    @Serializable
+    data object ForgotPassword : Screen
+
+    @Serializable
+    data class OtpVerification(val phoneNumber: String) : Screen
+
+    @Serializable
+    data class ResetPassword(val phoneNumber: String) : Screen
 }

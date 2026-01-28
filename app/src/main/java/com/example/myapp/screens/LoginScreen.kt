@@ -11,6 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.myapp.viewmodel.AuthUiState
+import com.example.myapp.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
 
 /**
  * Login Screen
@@ -22,6 +25,7 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun LoginScreen(
+    authViewModel: AuthViewModel,
     onLoginSuccess: (String, String) -> Unit
 ) {
     // ========================================
@@ -29,9 +33,25 @@ fun LoginScreen(
     // ========================================
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }  // ✅ Toggle visibility
-    var isLoading by remember { mutableStateOf(false) }  // ✅ Loading state
-    var errorMessage by remember { mutableStateOf("") }  // ✅ Error handling
+    var passwordVisible by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    val uiState by authViewModel.uiState.collectAsState()
+    val isLoading = uiState is AuthUiState.Loading
+    val coroutineScope = rememberCoroutineScope()
+
+    // React to login result
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is AuthUiState.LoginSuccess -> {
+                onLoginSuccess(username, password)
+                authViewModel.resetUiState()
+            }
+            is AuthUiState.Error -> {
+                errorMessage = (uiState as AuthUiState.Error).message
+            }
+            else -> {}
+        }
+    }
 
     // ========================================
     // UI
@@ -62,12 +82,12 @@ fun LoginScreen(
             value = username,
             onValueChange = {
                 username = it
-                errorMessage = ""  // Clear error on input
+                errorMessage = ""
             },
             label = { Text("Username") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,  // ✅ Single line input
-            isError = errorMessage.isNotEmpty()  // ✅ Show error state
+            singleLine = true,
+            isError = errorMessage.isNotEmpty()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -77,14 +97,14 @@ fun LoginScreen(
             value = password,
             onValueChange = {
                 password = it
-                errorMessage = ""  // Clear error on input
+                errorMessage = ""
             },
             label = { Text("Password") },
             visualTransformation = if (passwordVisible)
                 VisualTransformation.None
             else
                 PasswordVisualTransformation(),
-            trailingIcon = {  // ✅ Eye icon to toggle
+            trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible)
@@ -125,17 +145,19 @@ fun LoginScreen(
                     password.isEmpty() -> {
                         errorMessage = "Please enter password"
                     }
-                    password.length < 4 -> {  // ✅ Minimum length
+                    password.length < 4 -> {
                         errorMessage = "Password must be at least 4 characters"
                     }
                     else -> {
-                        isLoading = true
-                        onLoginSuccess(username, password)
+                        errorMessage = ""
+                        coroutineScope.launch {
+                            authViewModel.login(username, password)
+                        }
                     }
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading  // ✅ Disable during loading
+            enabled = !isLoading
         ) {
             if (isLoading) {
                 CircularProgressIndicator(

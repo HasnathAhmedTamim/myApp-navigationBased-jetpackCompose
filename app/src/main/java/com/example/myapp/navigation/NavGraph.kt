@@ -14,13 +14,18 @@ import com.example.myapp.screens.AlbumItemDetailScreen
 import com.example.myapp.screens.AlbumScreen
 import com.example.myapp.screens.CardDetailScreen
 import com.example.myapp.screens.HomeScreen
-import com.example.myapp.screens.LoginScreen
+import com.example.myapp.screens.auth.LoginScreen
+import com.example.myapp.screens.auth.SignupScreen
+import com.example.myapp.screens.auth.ForgotPasswordScreen
+import com.example.myapp.screens.auth.OtpVerificationScreen
+import com.example.myapp.screens.auth.ResetPasswordScreen
 import com.example.myapp.screens.ProfileScreen
 import com.example.myapp.screens.SearchScreen
+import com.example.myapp.viewmodel.AuthViewModel
 
 
 @Composable
-fun NavGraph() {
+fun NavGraph(authViewModel: AuthViewModel) {
     // Navigation graph implementation goes here
     val navController = rememberNavController()
     val currentUser = remember { mutableStateOf<User?>(null) }
@@ -40,21 +45,87 @@ fun NavGraph() {
         // LoginScreen route
         composable<Screen.Login> {
             LoginScreen(
-                onLoginSuccess = { username, password ->
-                    currentUser.value = User(
-                        username = username,
-                        email = "$username@example.com",
-                        phone = "017********"
-                    )
+                onLoginSuccess = {
                     navController.navigate(Screen.Home) {
                         popUpTo<Screen.Login> { inclusive = true }
                     }
-                }
+                },
+                onSignupClick = {
+                    navController.navigate(Screen.Signup)
+                },
+                onForgotPasswordClick = {
+                    navController.navigate(Screen.ForgotPassword)
+                },
+                viewModel = authViewModel
+            )
+        }
+
+        // SignupScreen route
+        composable<Screen.Signup> {
+            SignupScreen(
+                onSignupSuccess = { phoneNumber ->
+                    // After signup, go to login or OTP screen as needed
+                    navController.popBackStack()
+                },
+                onLoginClick = {
+                    navController.popBackStack()
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                viewModel = authViewModel
+            )
+        }
+
+        // ForgotPasswordScreen route
+        composable<Screen.ForgotPassword> {
+            ForgotPasswordScreen(
+                onPhoneVerified = { phoneNumber ->
+                    navController.navigate(Screen.OtpVerification(phoneNumber))
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                viewModel = authViewModel
+            )
+        }
+        // OtpVerificationScreen route
+        composable<Screen.OtpVerification> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.OtpVerification>()
+            OtpVerificationScreen(
+                phoneNumber = args.phoneNumber,
+                isForSignup = false,
+                onOtpVerified = {
+                    navController.navigate(Screen.ResetPassword(args.phoneNumber))
+                },
+                onBackClick = { navController.popBackStack() },
+                viewModel = authViewModel
+            )
+        }
+        // ResetPasswordScreen route
+        composable<Screen.ResetPassword> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.ResetPassword>()
+            ResetPasswordScreen(
+                phoneNumber = args.phoneNumber,
+                onPasswordReset = {
+                    navController.navigate(Screen.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onBackClick = { navController.popBackStack() },
+                viewModel = authViewModel
             )
         }
 
         //HomeScreen route
         composable<Screen.Home> {
+            // Fetch user info from Room after login
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                val user = authViewModel.getCurrentUserModel()
+                if (user != null) {
+                    currentUser.value = user
+                }
+            }
             HomeScreen(
                 username = currentUser.value?.username ?: "User",
                 onProfileClick = {
@@ -79,7 +150,14 @@ fun NavGraph() {
         composable<Screen.Profile> {
             ProfileScreen(
                 user = currentUser.value,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                viewModel = authViewModel,
+                onLogout = {
+                    currentUser.value = null
+                    navController.navigate(Screen.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 
