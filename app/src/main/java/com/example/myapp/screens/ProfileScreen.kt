@@ -77,6 +77,20 @@ fun ProfileScreen(
             ) {
                 Text("Logout")
             }
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        viewModel.deleteCurrentUser {
+                            onLogout()
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Delete Account")
+            }
         }
     }
 }

@@ -176,4 +176,15 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
             _uiState.update { AuthUiState.LogoutSuccess }
         }
     }
+
+    fun deleteCurrentUser(onDeleted: () -> Unit) {
+        viewModelScope.launch {
+            val username = repository.currentUsername.first()
+            if (username != null) {
+                repository.deleteUserByUsername(username)
+                logout()
+                onDeleted()
+            }
+        }
+    }
 }
