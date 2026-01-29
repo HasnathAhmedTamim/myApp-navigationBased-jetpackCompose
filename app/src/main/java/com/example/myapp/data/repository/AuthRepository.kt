@@ -26,10 +26,6 @@ class AuthRepository(
         return userDao.isUsernameExists(username) == 0
     }
 
-    suspend fun isPhoneNumberAvailable(phoneNumber: String): Boolean {
-        return userDao.isPhoneNumberExists(phoneNumber) == 0
-    }
-
     suspend fun loginUser(username: String, password: String): Result<UserEntity> {
         return try {
             val user = userDao.verifyLogin(username, password)
@@ -62,6 +58,10 @@ class AuthRepository(
 
     suspend fun updatePassword(phoneNumber: String, newPassword: String): Int {
         return userDao.updatePasswordByPhone(phoneNumber, newPassword)
+    }
+
+    suspend fun getUserByUsernameAndPhone(username: String, phoneNumber: String): UserEntity? {
+        return userDao.getUserByUsernameAndPhone(username, phoneNumber)
     }
 
     val isLoggedIn: Flow<Boolean> = sessionManager.isLoggedIn

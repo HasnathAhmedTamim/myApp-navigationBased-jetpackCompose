@@ -19,6 +19,7 @@ import com.example.myapp.viewmodel.AuthViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResetPasswordScreen(
+    username: String,
     phoneNumber: String,
     onPasswordReset: () -> Unit,
     onBackClick: () -> Unit,
@@ -119,7 +120,7 @@ fun ResetPasswordScreen(
                 AuthButton(
                     text = "Reset Password",
                     onClick = {
-                        viewModel.resetPassword(phoneNumber, newPassword, confirmPassword)
+                        viewModel.resetPassword(username, phoneNumber, newPassword, confirmPassword)
                     },
                     enabled = uiState !is AuthUiState.Loading
                 )

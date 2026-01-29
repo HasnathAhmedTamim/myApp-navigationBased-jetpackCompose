@@ -31,6 +31,7 @@ fun SignupScreen(
     var phoneNumber by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var validationError by remember { mutableStateOf<String?>(null) }
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -164,6 +165,33 @@ fun SignupScreen(
                 AuthButton(
                     text = "Sign Up",
                     onClick = {
+                        // Validation before signup
+                        val usernameResult = com.example.myapp.util.ValidationUtil.validateUsername(username)
+                        if (!usernameResult.isValid) {
+                            validationError = usernameResult.errorMessage
+                            return@AuthButton
+                        }
+                        val emailResult = com.example.myapp.util.ValidationUtil.validateEmail(email)
+                        if (!emailResult.isValid) {
+                            validationError = emailResult.errorMessage
+                            return@AuthButton
+                        }
+                        val phoneResult = com.example.myapp.util.ValidationUtil.validatePhoneNumber(phoneNumber)
+                        if (!phoneResult.isValid) {
+                            validationError = phoneResult.errorMessage
+                            return@AuthButton
+                        }
+                        val passwordResult = com.example.myapp.util.ValidationUtil.validatePassword(password)
+                        if (!passwordResult.isValid) {
+                            validationError = passwordResult.errorMessage
+                            return@AuthButton
+                        }
+                        val confirmResult = com.example.myapp.util.ValidationUtil.validateConfirmPassword(password, confirmPassword)
+                        if (!confirmResult.isValid) {
+                            validationError = confirmResult.errorMessage
+                            return@AuthButton
+                        }
+                        validationError = null
                         val user = com.example.myapp.data.local.UserEntity(
                             username = username,
                             email = if (email.isBlank()) null else email,
@@ -174,6 +202,22 @@ fun SignupScreen(
                     },
                     enabled = uiState !is AuthUiState.Loading
                 )
+
+                if (validationError != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = validationError ?: "",
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 

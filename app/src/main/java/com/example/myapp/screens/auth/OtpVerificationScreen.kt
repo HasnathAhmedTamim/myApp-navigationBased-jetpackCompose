@@ -21,6 +21,7 @@ import com.example.myapp.viewmodel.AuthViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtpVerificationScreen(
+    username: String,
     phoneNumber: String,
     isForSignup: Boolean,
     onOtpVerified: () -> Unit,

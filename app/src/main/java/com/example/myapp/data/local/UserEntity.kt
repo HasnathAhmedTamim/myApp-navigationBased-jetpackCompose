@@ -14,8 +14,8 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "users",
     indices = [
-        Index(value = ["username"], unique = true),
-        Index(value = ["phoneNumber"], unique = true)
+        Index(value = ["username"], unique = true)
+        // Removed unique constraint from phoneNumber
     ]
 )
 data class UserEntity(

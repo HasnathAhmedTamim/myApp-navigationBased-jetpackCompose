@@ -36,6 +36,6 @@ interface UserDao {
     @Query("SELECT COUNT(*) FROM users WHERE username = :username")
     suspend fun isUsernameExists(username: String): Int  // ✅ Keep as is
 
-    @Query("SELECT COUNT(*) FROM users WHERE phoneNumber = :phoneNumber")
-    suspend fun isPhoneNumberExists(phoneNumber: String): Int  // ✅ Keep as is
+    @Query("SELECT * FROM users WHERE username = :username AND phoneNumber = :phoneNumber")
+    suspend fun getUserByUsernameAndPhone(username: String, phoneNumber: String): UserEntity?
 }

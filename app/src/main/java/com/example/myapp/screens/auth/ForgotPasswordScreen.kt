@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,10 +22,11 @@ import com.example.myapp.viewmodel.AuthViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordScreen(
-    onPhoneVerified: (String) -> Unit,
+    onPhoneVerified: (String, String) -> Unit,
     onBackClick: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
+    var username by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     val uiState by viewModel.uiState.collectAsState()
 
@@ -32,7 +34,7 @@ fun ForgotPasswordScreen(
         when (val state = uiState) {
             is AuthUiState.PhoneNumberFound -> {
                 viewModel.resetUiState()
-                onPhoneVerified(state.phoneNumber)
+                onPhoneVerified(username, state.phoneNumber)
             }
             else -> {}
         }
@@ -77,6 +79,18 @@ fun ForgotPasswordScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
+                // Username Field
+                AuthTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = "Username",
+                    leadingIcon = {
+                        Icon(Icons.Default.Person, contentDescription = null)
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 // Phone Number Field
                 AuthTextField(
                     value = phoneNumber,
@@ -110,7 +124,7 @@ fun ForgotPasswordScreen(
                 // Send OTP Button
                 AuthButton(
                     text = "Send OTP",
-                    onClick = { viewModel.checkPhoneNumber(phoneNumber) },
+                    onClick = { onPhoneVerified(username, phoneNumber) },
                     enabled = uiState !is AuthUiState.Loading
                 )
             }

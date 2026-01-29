@@ -47,8 +47,8 @@ sealed interface Screen {
     data object ForgotPassword : Screen
 
     @Serializable
-    data class OtpVerification(val phoneNumber: String) : Screen
+    data class OtpVerification(val username: String, val phoneNumber: String) : Screen
 
     @Serializable
-    data class ResetPassword(val phoneNumber: String) : Screen
+    data class ResetPassword(val username: String, val phoneNumber: String) : Screen
 }

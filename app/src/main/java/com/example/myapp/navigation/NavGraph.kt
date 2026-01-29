@@ -63,7 +63,7 @@ fun NavGraph(authViewModel: AuthViewModel) {
         // SignupScreen route
         composable<Screen.Signup> {
             SignupScreen(
-                onSignupSuccess = { phoneNumber ->
+                onSignupSuccess = {
                     // After signup, go to login or OTP screen as needed
                     navController.popBackStack()
                 },
@@ -80,8 +80,8 @@ fun NavGraph(authViewModel: AuthViewModel) {
         // ForgotPasswordScreen route
         composable<Screen.ForgotPassword> {
             ForgotPasswordScreen(
-                onPhoneVerified = { phoneNumber ->
-                    navController.navigate(Screen.OtpVerification(phoneNumber))
+                onPhoneVerified = { username, phoneNumber ->
+                    navController.navigate(Screen.OtpVerification(username, phoneNumber))
                 },
                 onBackClick = {
                     navController.popBackStack()
@@ -93,10 +93,11 @@ fun NavGraph(authViewModel: AuthViewModel) {
         composable<Screen.OtpVerification> { backStackEntry ->
             val args = backStackEntry.toRoute<Screen.OtpVerification>()
             OtpVerificationScreen(
+                username = args.username,
                 phoneNumber = args.phoneNumber,
                 isForSignup = false,
                 onOtpVerified = {
-                    navController.navigate(Screen.ResetPassword(args.phoneNumber))
+                    navController.navigate(Screen.ResetPassword(args.username, args.phoneNumber))
                 },
                 onBackClick = { navController.popBackStack() },
                 viewModel = authViewModel
@@ -106,6 +107,7 @@ fun NavGraph(authViewModel: AuthViewModel) {
         composable<Screen.ResetPassword> { backStackEntry ->
             val args = backStackEntry.toRoute<Screen.ResetPassword>()
             ResetPasswordScreen(
+                username = args.username,
                 phoneNumber = args.phoneNumber,
                 onPasswordReset = {
                     navController.navigate(Screen.Login) {

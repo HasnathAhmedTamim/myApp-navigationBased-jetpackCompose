@@ -53,6 +53,12 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     fun signup(user: UserEntity) {
         viewModelScope.launch {
             _uiState.update { AuthUiState.Loading }
+            // Only check for unique username before registering
+            val usernameAvailable = repository.isUsernameAvailable(user.username)
+            if (!usernameAvailable) {
+                _uiState.update { AuthUiState.Error("Username already registered") }
+                return@launch
+            }
             val result = repository.registerUser(user)
             _uiState.update {
                 if (result.isSuccess) AuthUiState.SignupSuccess
@@ -99,7 +105,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
-    fun resetPassword(phoneNumber: String, newPassword: String, confirmPassword: String) {
+    fun resetPassword(username: String, phoneNumber: String, newPassword: String, confirmPassword: String) {
         viewModelScope.launch {
             _uiState.update { AuthUiState.Loading }
 
@@ -120,6 +126,13 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
             }
 
             try {
+                val user = repository.getUserByUsernameAndPhone(username, phoneNumber)
+                if (user == null) {
+                    _uiState.update {
+                        AuthUiState.Error("No account found with this username and phone number")
+                    }
+                    return@launch
+                }
                 val rows = repository.updatePassword(phoneNumber, newPassword)
                 _uiState.update {
                     if (rows > 0) {
