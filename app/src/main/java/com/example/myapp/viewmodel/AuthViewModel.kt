@@ -133,7 +133,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                     }
                     return@launch
                 }
-                val rows = repository.updatePassword(phoneNumber, newPassword)
+                val rows = repository.updatePassword(username, phoneNumber, newPassword)
                 _uiState.update {
                     if (rows > 0) {
                         AuthUiState.PasswordResetSuccess

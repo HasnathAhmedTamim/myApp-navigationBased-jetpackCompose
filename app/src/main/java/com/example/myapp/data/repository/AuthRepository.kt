@@ -64,6 +64,10 @@ class AuthRepository(
         return userDao.getUserByUsernameAndPhone(username, phoneNumber)
     }
 
+    suspend fun updatePassword(username: String, phoneNumber: String, newPassword: String): Int {
+        return userDao.updatePasswordByUsernameAndPhone(username, phoneNumber, newPassword)
+    }
+
     val isLoggedIn: Flow<Boolean> = sessionManager.isLoggedIn
     val currentUserId: Flow<Long?> = sessionManager.userId
     val currentUsername: Flow<String?> = sessionManager.username

@@ -38,4 +38,7 @@ interface UserDao {
 
     @Query("SELECT * FROM users WHERE username = :username AND phoneNumber = :phoneNumber")
     suspend fun getUserByUsernameAndPhone(username: String, phoneNumber: String): UserEntity?
+
+    @Query("UPDATE users SET password = :newPassword WHERE username = :username AND phoneNumber = :phoneNumber")
+    suspend fun updatePasswordByUsernameAndPhone(username: String, phoneNumber: String, newPassword: String): Int
 }
