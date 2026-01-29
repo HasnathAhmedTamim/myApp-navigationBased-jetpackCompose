@@ -30,7 +30,7 @@ class AuthRepository(
         return try {
             val user = userDao.verifyLogin(username, password)
             if (user != null) {
-                sessionManager.saveLoginSession(user.id, user.username)
+                sessionManager.saveLoginSession(user.id, user.username, user.phoneNumber)
                 Result.success(user)
             } else {
                 Result.failure(Exception("Invalid credentials or account not verified"))

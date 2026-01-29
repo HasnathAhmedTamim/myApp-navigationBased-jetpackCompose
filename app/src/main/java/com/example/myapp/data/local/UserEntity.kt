@@ -36,7 +36,7 @@ data class UserEntity(
     val password: String,
 
     @ColumnInfo(name = "isVerified")
-    val isVerified: Boolean = false,
+    val isVerified: Boolean = true,
 
     @ColumnInfo(name = "createdAt")
     val createdAt: Long = System.currentTimeMillis()
