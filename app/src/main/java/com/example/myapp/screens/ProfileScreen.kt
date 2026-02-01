@@ -31,6 +31,7 @@ fun ProfileScreen(
 ) {
     val coroutineScope = rememberCoroutineScope()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             AppTopBar(
@@ -73,10 +74,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(24.dp))
             Button(
                 onClick = {
-                    coroutineScope.launch {
-                        viewModel.logout()
-                        onLogout()
-                    }
+                    showLogoutDialog = true
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -111,6 +109,30 @@ fun ProfileScreen(
                     },
                     dismissButton = {
                         TextButton(onClick = { showDeleteDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
+            if (showLogoutDialog) {
+                AlertDialog(
+                    onDismissRequest = { showLogoutDialog = false },
+                    title = { Text("Logout") },
+                    text = { Text("Are you sure you want to logout?") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showLogoutDialog = false
+                            coroutineScope.launch {
+                                viewModel.logout()
+                                onLogout()
+                            }
+                        }) {
+                            Text("Yes, Logout")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showLogoutDialog = false }) {
                             Text("Cancel")
                         }
                     }
