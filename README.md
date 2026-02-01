@@ -177,9 +177,77 @@ Back stack: [Home] → [Search]
 
 ---
 
-### **4. Navigation Patterns**
+### **4. Profile Management**
 
-#### **Pattern 1: Simple Navigation (Profile)**
+```
+ProfileScreen receives userId from SessionManager
+    ↓
+ProfileViewModel.loadUserProfile(userId)
+    ↓
+UserRepository.getUserById(userId)
+    ↓
+Room Database: SELECT * FROM users WHERE userId = ?
+    ↓
+User data displayed in ProfileScreen
+```
+
+#### **Logout Action**
+```
+User taps "Logout" button
+    ↓
+Confirmation dialog appears
+    ↓
+User confirms → ProfileViewModel.logout()
+    ↓
+SessionManager.clearSession()
+    ↓
+DataStore clears all preferences
+    ↓
+Navigate to LoginScreen {
+  popUpTo(0) { inclusive = true }
+}
+```
+
+#### **Delete Account Action**
+```
+User taps "Delete Account" button
+    ↓
+Confirmation dialog: "Are you sure?"
+    ↓
+User confirms → ProfileViewModel.deleteAccount(userId)
+    ↓
+UserRepository.deleteUser(userId)
+    ↓
+Room Database: DELETE FROM users WHERE userId = ?
+    ↓
+SessionManager.clearSession()
+    ↓
+Navigate to LoginScreen
+    ↓
+User cannot login anymore (no database record)
+```
+
+---
+
+### **5. Navigation Patterns**
+
+#### **Pattern 1: Authentication Flow**
+```kotlin
+// Signup → Login
+navigate(Screen.Login) {
+  popUpTo<Screen.Signup> { inclusive = true }
+}
+
+// Login → Home (Clear all auth screens)
+navigate(Screen.Home) {
+  popUpTo<Screen.Login> { inclusive = true }
+}
+
+// Forgot Password → OTP → Reset → Login
+// Each step replaces previous to prevent back navigation
+```
+
+#### **Pattern 2: Simple Navigation (Profile)**
 ```kotlin
 // From HomeScreen
 onProfileClick()
@@ -189,7 +257,7 @@ navController.navigate(Screen.Profile)
 Stack: [Home] → [Profile]
 ```
 
-#### **Pattern 2: Bottom Tab Navigation**
+#### **Pattern 3: Bottom Tab Navigation**
 ```kotlin
 // From Search → Album
 navigate(Screen.Album) {
@@ -199,7 +267,7 @@ navigate(Screen.Album) {
 Stack: [Home] → [Album]
 ```
 
-#### **Pattern 3: Nested Detail Navigation**
+#### **Pattern 4: Nested Detail Navigation**
 ```kotlin
 // AlbumScreen → AlbumDetailScreen → AlbumItemDetailScreen
 1. Album list click → Screen.AlbumDetail
@@ -209,17 +277,33 @@ Stack: [Home] → [Album]
 
 ---
 
-### **5. Type-Safe Navigation**
+### **6. Type-Safe Navigation**
 
 #### **Route Definitions (`Screen.kt`)**
 ```kotlin
 @Serializable
 sealed interface Screen {
+    // Authentication
     @Serializable data object Login
+    @Serializable data object Signup
+    @Serializable data object ForgotPassword
+    @Serializable data object OtpVerification
+    @Serializable data object ResetPassword
+    
+    // Main App
     @Serializable data object Home
+    @Serializable data object Profile
+    @Serializable data object Search
+    @Serializable data object Album
+    
+    // Detail Screens
     @Serializable data class CardDetail(
         val cardId: String,
         val cardTitle: String
+    )
+    @Serializable data class AlbumItemDetail(
+        val itemId: String,
+        val itemTitle: String
     )
 }
 ```
@@ -244,7 +328,7 @@ composable<Screen.CardDetail> { backStackEntry ->
 
 ---
 
-### **6. Back Navigation Flow**
+### **7. Back Navigation Flow**
 
 ```
 User presses back/back arrow
@@ -411,45 +495,93 @@ navigate(Screen.Home) {
 
 ## 🧪 Screen-by-Screen Details
 
-### **LoginScreen**
-- **State:** `username`, `password` (local)
-- **Events:** `onLoginSuccess(username, password)`
-- **Navigation Out:** → Home (clears login from stack)
+### **Authentication Screens**
 
-### **HomeScreen**
-- **Receives:** `username` from `currentUser`
+#### **LoginScreen**
+- **State:** `username`, `password` (local)
+- **ViewModel:** AuthViewModel
+- **Actions:** Login, Navigate to Signup/Forgot Password
+- **Validation:** Username & password required
+- **Navigation Out:** → Home (clears login from stack)
+- **Features:** Visual feedback for success/error
+
+#### **SignupScreen**
+- **State:** `username`, `email`, `phone`, `password`, `confirmPassword`
+- **ViewModel:** AuthViewModel
+- **Validation:** 
+  - Username: 3-20 chars, alphanumeric + underscore, unique
+  - Email: Optional, valid format
+  - Phone: 11 digits, Bangladesh format (01[3-9]XXXXXXXX)
+  - Password: 6-50 chars
+  - Confirm Password: Must match
+- **Database:** Creates new UserEntity with isVerified=true
+- **Navigation:** → Login on success
+- **Features:** Real-time validation feedback
+
+#### **ForgotPasswordScreen**
+- **State:** `phoneNumber` (local)
+- **Validation:** 11-digit Bangladesh phone
+- **Navigation:** → OtpVerificationScreen
+- **Features:** Phone number formatting
+
+#### **OtpVerificationScreen**
+- **State:** `otpCode` (6 digits)
+- **Validation:** Fixed OTP = "111111"
+- **Navigation:** → ResetPasswordScreen on success
+- **Features:** Visual OTP input
+
+#### **ResetPasswordScreen**
+- **State:** `newPassword`, `confirmPassword`
+- **ViewModel:** AuthViewModel
+- **Database:** Updates password for phone number
+- **Navigation:** → Login on success
+- **Note:** Affects all users with same phone number
+
+---
+
+### **Main App Screens**
+
+#### **HomeScreen**
+- **Receives:** `username` from SessionManager
 - **Events:** 5 callbacks (profile, home, search, album, card clicks)
 - **UI:** 4-card grid + top/bottom bars
 - **Navigation:** Pushes ProfileScreen, CardDetailScreen, SearchScreen, AlbumScreen
+- **Features:** Material Design 3 cards with elevation
 
-### **CardDetailScreen**
+#### **ProfileScreen**
+- **ViewModel:** ProfileViewModel
+- **Data Source:** Room Database via SessionManager
+- **Displays:** Username, Email, Phone, Account Created Date
+- **Actions:**
+  - **Logout:** Clears session, returns to Login
+  - **Delete Account:** Removes user from database permanently
+- **Confirmations:** Both actions require user confirmation
+- **Navigation:** → Login on logout/delete
+
+#### **CardDetailScreen**
 - **Receives:** `cardId`, `cardTitle` (from route args)
 - **Events:** `onBack`
 - **UI:** Displays card info
 - **Navigation:** Pops back to Home
 
-### **ProfileScreen**
-- **Receives:** `User?` object
-- **Events:** `onBack`
-- **UI:** Shows user details or "N/A"
-
-### **SearchScreen**
+#### **SearchScreen**
 - **State:** `searchQuery` (local)
 - **Events:** Back, home, album navigation
-- **UI:** Search bar (non-functional placeholder)
+- **UI:** Search bar (placeholder)
+- **Navigation:** Bottom nav integration
 
-### **AlbumScreen**
+#### **AlbumScreen**
 - **Receives:** `albumItems` list
 - **Events:** Item clicks, detail button, back/nav
 - **UI:** Scrollable list of album cards
 - **Navigation:** → AlbumDetailScreen, AlbumItemDetailScreen
 
-### **AlbumDetailScreen**
+#### **AlbumDetailScreen**
 - **Receives:** Full `albumItems` list
 - **Events:** Item clicks, back
 - **UI:** Grid of all albums
 
-### **AlbumItemDetailScreen**
+#### **AlbumItemDetailScreen**
 - **Receives:** `itemId`, `itemTitle` (route args) → looks up full item
 - **Events:** `onBack`
 - **UI:** Displays selected album details or "Not found"
@@ -508,16 +640,53 @@ fun CardDetailScreen(
 
 ## 📊 Data Models
 
-### **User.kt**
+### **UserEntity.kt** (Database Layer)
 ```kotlin
-data class User(
+@Entity(tableName = "users")
+data class UserEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    
+    @ColumnInfo(name = "userId")
+    val userId: Long,
+    
+    @ColumnInfo(name = "username")
     val username: String,
-    val email: String
+    
+    @ColumnInfo(name = "email")
+    val email: String?,
+    
+    @ColumnInfo(name = "phoneNumber")
+    val phoneNumber: String,
+    
+    @ColumnInfo(name = "password")
+    val password: String,
+    
+    @ColumnInfo(name = "isVerified")
+    val isVerified: Boolean = true,
+    
+    @ColumnInfo(name = "createdAt")
+    val createdAt: Long = System.currentTimeMillis()
 )
 ```
-- Stored in `currentUser: MutableState<User?>`
-- Updated on login success
-- Passed to ProfileScreen
+- **Constraints:** Unique username
+- **Auto-verification:** All users auto-verified (isVerified = true)
+- **Multiple users:** Can share same phone number
+
+### **User.kt** (UI Layer)
+```kotlin
+data class User(
+    val userId: Long,
+    val username: String,
+    val email: String?,
+    val phoneNumber: String,
+    val isVerified: Boolean,
+    val createdAt: Long
+)
+```
+- Mapped from UserEntity
+- Used in ViewModels and UI
+- Excludes sensitive data (password)
 
 ### **AlbumItem.kt**
 ```kotlin
@@ -533,12 +702,175 @@ data class AlbumItem(
 
 ---
 
+## 🗄️ Database Architecture
+
+### **AppDatabase.kt**
+```kotlin
+@Database(
+    entities = [UserEntity::class],
+    version = 1,
+    exportSchema = false
+)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun userDao(): UserDao
+    
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+        
+        fun getInstance(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "myapp_database"
+                )
+                .fallbackToDestructiveMigration()
+                .build()
+                .also { INSTANCE = it }
+            }
+        }
+    }
+}
+```
+
+### **UserDao.kt** - Available Operations
+```kotlin
+interface UserDao {
+    // Create
+    @Insert
+    suspend fun insertUser(user: UserEntity): Long
+    
+    // Read
+    @Query("SELECT * FROM users WHERE userId = :userId")
+    suspend fun getUserById(userId: Long): UserEntity?
+    
+    @Query("SELECT * FROM users WHERE username = :username")
+    suspend fun getUserByUsername(username: String): UserEntity?
+    
+    @Query("SELECT * FROM users WHERE phoneNumber = :phoneNumber")
+    suspend fun getUsersByPhoneNumber(phoneNumber: String): List<UserEntity>
+    
+    // Update
+    @Update
+    suspend fun updateUser(user: UserEntity)
+    
+    @Query("UPDATE users SET password = :password WHERE phoneNumber = :phoneNumber")
+    suspend fun updatePasswordByPhone(phoneNumber: String, password: String)
+    
+    // Delete
+    @Query("DELETE FROM users WHERE userId = :userId")
+    suspend fun deleteUser(userId: Long)
+    
+    @Query("SELECT EXISTS(SELECT 1 FROM users WHERE username = :username)")
+    suspend fun isUsernameExists(username: String): Boolean
+}
+```
+
+---
+
+## 💾 Session Management
+
+### **SessionManager.kt** (DataStore)
+```kotlin
+class SessionManager(private val context: Context) {
+    
+    // Stored Data
+    data class SessionData(
+        val isLoggedIn: Boolean = false,
+        val userId: Long? = null,
+        val username: String? = null,
+        val phoneNumber: String? = null,
+        val lastLogin: Long? = null
+    )
+    
+    // Key Operations
+    suspend fun saveLoginSession(userId: Long, username: String, phoneNumber: String)
+    suspend fun clearSession()
+    suspend fun updateUsername(newUsername: String)
+    suspend fun getCurrentSession(): SessionData
+    suspend fun checkLoginStatus(): Boolean
+    
+    // Reactive Flows
+    val sessionData: Flow<SessionData>
+    val isLoggedIn: Flow<Boolean>
+    val userId: Flow<Long?>
+    val username: Flow<String?>
+}
+```
+
+**Persistence:**
+- Survives app restarts
+- Thread-safe with coroutines
+- Reactive with Kotlin Flow
+- Auto-login on app start if session exists
+
+---
+
+## ✅ Input Validation
+
+### **ValidationUtil.kt**
+
+| Field | Rules | Example Valid | Example Invalid |
+|-------|-------|---------------|-----------------|
+| **Username** | 3-20 chars, alphanumeric + underscore | `john_doe`, `user123` | `ab`, `user@name` |
+| **Email** | Valid format (optional) | `user@gmail.com`, `` | `invalid.email` |
+| **Phone** | 11 digits, BD format | `01712345678` | `123456`, `02123456789` |
+| **Password** | 6-50 characters | `admin123` | `12345` |
+| **OTP** | Exactly 6 digits | `111111` | `1234`, `abc123` |
+
+**BD Phone Operators Supported:**
+- Grameenphone: 017
+- Robi: 018
+- Banglalink: 019
+- Teletalk: 015
+- Airtel: 016
+- Others: 013, 014
+
+**Functions:**
+```kotlin
+fun validateUsername(username: String): ValidationResult
+fun validateEmail(email: String): ValidationResult
+fun validatePhoneNumber(phone: String): ValidationResult
+fun validatePassword(password: String): ValidationResult
+fun validateConfirmPassword(password: String, confirmPassword: String): ValidationResult
+fun validateOtp(otp: String): ValidationResult
+fun formatPhoneNumber(phone: String): String // Returns 01712-345678
+fun sanitizePhoneNumber(phone: String): String // Removes spaces/dashes
+```
+
+---
+
 ## 🚀 Getting Started
 
 ### **Prerequisites**
 - Android Studio Otter 3+ (2025.2.3)
 - Kotlin 1.9+
 - Gradle 8+
+- Min SDK: 24 (Android 7.0)
+
+### **Dependencies**
+```kotlin
+// Jetpack Compose
+implementation("androidx.compose.ui:ui")
+implementation("androidx.compose.material3:material3")
+implementation("androidx.activity:activity-compose")
+
+// Navigation
+implementation("androidx.navigation:navigation-compose")
+
+// Room Database
+implementation("androidx.room:room-runtime")
+implementation("androidx.room:room-ktx")
+ksp("androidx.room:room-compiler")
+
+// DataStore
+implementation("androidx.datastore:datastore-preferences")
+
+// Lifecycle & ViewModel
+implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
+implementation("androidx.lifecycle:lifecycle-runtime-compose")
+```
 
 ### **Build & Run**
 ```bash
@@ -550,17 +882,69 @@ git clone https://github.com/HasnathAhmedTamim/myapp.git
 # Run on emulator/device
 ```
 
+### **Default Test Account**
+After signup, you can create any account. Example:
+- Username: `hasnath`
+- Password: `Admin123`
+- Phone: `01756401520`
+
 ---
 
 ## 🧩 Key Takeaways
 
-1. **NavGraph is the brain** - Manages state + navigation logic
-2. **Screens are pure UI** - No navigation code, just callbacks
-3. **Type-safe routes** - No string-based bugs via `@Serializable`
-4. **UDF = predictable** - Data down, events up
-5. **remember = stability** - State survives recomposition
-6. **Back stack control** - `popUpTo` shapes navigation history
-7. **Lazy composables** - Efficient rendering for lists/grids
+1. **MVVM Architecture** - Clear separation: UI → ViewModel → Repository → Database
+2. **Room Database** - Persistent local storage with type-safe queries
+3. **DataStore Session** - Secure session management with reactive Flows
+4. **Type-safe Navigation** - No string-based bugs via `@Serializable`
+5. **Input Validation** - Comprehensive validation for all user inputs
+6. **UDF Pattern** - Predictable data flow: Repository → ViewModel → UI
+7. **Authentication Flow** - Complete signup/login/forgot password with OTP
+8. **Profile Management** - Logout and delete account functionality
+9. **Back Stack Control** - `popUpTo` shapes navigation history
+10. **Coroutines** - All database operations are async and non-blocking
+
+---
+
+## 🔒 Security Considerations
+
+### **Current Implementation**
+- ✅ Username uniqueness enforced
+- ✅ Session management with DataStore
+- ✅ Input validation on all fields
+- ⚠️ Passwords stored in plain text (not production-ready)
+
+### **Production Recommendations**
+- 🔐 Hash passwords with BCrypt/Argon2
+- 🔐 Implement real OTP service (SMS/Email)
+- 🔐 Add rate limiting for login attempts
+- 🔐 Use proper encryption for sensitive data
+- 🔐 Implement token-based authentication (JWT)
+
+---
+
+## 🐛 Known Issues & Limitations
+
+1. **Password Reset:** Updates all users with the same phone number
+2. **OTP Hardcoded:** Fixed to "111111" (no real SMS integration)
+3. **Email Optional:** Email field is not required during signup
+4. **No Password Recovery:** Forgot username feature not implemented
+5. **Plain Text Passwords:** Not suitable for production use
+
+---
+
+## 🔮 Future Enhancements
+
+- [ ] Implement real SMS OTP service
+- [ ] Add password hashing (BCrypt)
+- [ ] Email verification
+- [ ] Forgot username functionality
+- [ ] Profile picture upload
+- [ ] Change password in profile
+- [ ] Two-factor authentication (2FA)
+- [ ] Social media login (Google, Facebook)
+- [ ] Export user data
+- [ ] Dark mode theme support
+- [ ] Biometric authentication
 
 ---
 
@@ -569,6 +953,8 @@ git clone https://github.com/HasnathAhmedTamim/myapp.git
 - [Navigation in Compose](https://developer.android.com/jetpack/compose/navigation)
 - [State Management](https://developer.android.com/jetpack/compose/state)
 - [Material Design 3](https://m3.material.io/)
+- [Room Database](https://developer.android.com/training/data-storage/room)
+- [DataStore](https://developer.android.com/topic/libraries/architecture/datastore)
 
 ---
 
