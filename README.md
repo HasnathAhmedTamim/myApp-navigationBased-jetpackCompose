@@ -1,7 +1,7 @@
 # MyApp - Complete Technical Documentation
 
 ## 📱 Project Overview
-A modern Android application built with **Jetpack Compose** and **Material Design 3**, featuring authentication, navigation, and a multi-screen user interface.
+A modern Android application built with **Jetpack Compose** and **Material Design 3**, featuring comprehensive user authentication with OTP verification, persistent local database storage, session management, and a multi-screen user interface.
 
 ---
 
@@ -13,13 +13,22 @@ A modern Android application built with **Jetpack Compose** and **Material Desig
 - **Navigation:** Type-safe Compose Navigation
 - **Design System:** Material Design 3
 - **Build Tool:** Gradle
+- **Database:** Room (SQLite)
+- **Persistence:** DataStore (Session Management)
+- **Coroutines:** For async operations
+- **State Management:** MutableState, StateFlow
 
 ### **Architecture Pattern**
+- **MVVM (Model-View-ViewModel)** with Repository pattern
 - **Unidirectional Data Flow (UDF)**
-    - Data flows DOWN: NavGraph → Screens (parameters)
-    - Events flow UP: User actions → Callbacks → NavGraph
-- **Single Source of Truth**: `NavGraph` holds app state
-- **Separation of Concerns**: Screens are pure UI, navigation logic lives in `NavGraph`
+    - Data flows DOWN: Repository → ViewModel → Screen
+    - Events flow UP: User actions → ViewModel → Repository
+- **Single Source of Truth**: Room Database for user data, DataStore for session
+- **Separation of Concerns**: 
+    - **Screens**: Pure UI (Composables)
+    - **ViewModels**: Business logic & state management
+    - **Repository**: Data access abstraction
+    - **Database**: Data persistence layer
 
 ---
 
@@ -27,22 +36,59 @@ A modern Android application built with **Jetpack Compose** and **Material Desig
 
 ```
 com.example.myapp/
-├── MainActivity.kt          # Entry point, hosts Compose UI
+├── MainActivity.kt                    # Entry point, hosts Compose UI
+│
 ├── navigation/
-│   ├── NavGraph.kt         # Navigation orchestrator & state management
-│   └── Screen.kt           # Type-safe route definitions
+│   ├── NavGraph.kt                   # Navigation orchestrator & state management
+│   └── Screen.kt                     # Type-safe route definitions (Serializable)
+│
 ├── screens/
-│   ├── LoginScreen.kt      # Authentication screen
-│   ├── HomeScreen.kt       # Main dashboard with 4 cards
-│   ├── ProfileScreen.kt    # User profile display
-│   ├── SearchScreen.kt     # Search functionality
-│   ├── CardDetailScreen.kt # Individual card details
-│   ├── AlbumScreen.kt      # Album list view
-│   ├── AlbumDetailScreen.kt    # Album overview
-│   └── AlbumItemDetailScreen.kt # Individual album item
-└── models/
-    ├── User.kt            # User data model
-    └── AlbumItem.kt       # Album data model
+│   ├── auth/                         # Authentication screens
+│   │   ├── LoginScreen.kt           # User login with username/password
+│   │   ├── SignupScreen.kt          # New user registration with validation
+│   │   ├── ForgotPasswordScreen.kt  # Phone number entry for password reset
+│   │   ├── OtpVerificationScreen.kt # OTP verification (fixed OTP: 111111)
+│   │   └── ResetPasswordScreen.kt   # Set new password
+│   │
+│   ├── main/                         # Main app screens (future expansion)
+│   │
+│   ├── HomeScreen.kt                # Main dashboard with 4 cards
+│   ├── ProfileScreen.kt             # User profile with logout & delete account
+│   ├── SearchScreen.kt              # Search functionality
+│   ├── CardDetailScreen.kt          # Individual card details
+│   ├── AlbumScreen.kt               # Album list view
+│   ├── AlbumDetailScreen.kt         # Album overview
+│   └── AlbumItemDetailScreen.kt     # Individual album item
+│
+├── viewmodel/
+│   ├── AuthViewModel.kt             # Authentication business logic
+│   └── ProfileViewModel.kt          # Profile management logic
+│
+├── data/
+│   ├── local/
+│   │   ├── AppDatabase.kt          # Room database configuration
+│   │   ├── dao/
+│   │   │   └── UserDao.kt          # User data access object (CRUD operations)
+│   │   └── entity/
+│   │       └── UserEntity.kt       # User table schema
+│   │
+│   ├── repository/
+│   │   └── UserRepository.kt       # Data access abstraction layer
+│   │
+│   └── preferences/
+│       └── SessionManager.kt       # DataStore-based session persistence
+│
+├── model/
+│   ├── User.kt                     # User data model (for UI layer)
+│   └── AlbumItem.kt                # Album data model
+│
+├── util/
+│   └── ValidationUtil.kt           # Input validation utilities
+│
+├── components/                      # Reusable UI components
+│
+└── ui/
+    └── theme/                       # Material Design 3 theme configuration
 ```
 
 ---

@@ -29,14 +29,18 @@ fun LoginScreen(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    // Simple feedback: show a short Text for error or success
+    var feedbackMessage by remember { mutableStateOf<String?>(null) }
     val uiState by viewModel.uiState.collectAsState()
-
-    // Handle UI State
     LaunchedEffect(uiState) {
         when (uiState) {
             is AuthUiState.LoginSuccess -> {
+                feedbackMessage = "Login successful"
                 viewModel.resetUiState()
                 onLoginSuccess()
+            }
+            is AuthUiState.Error -> {
+                feedbackMessage = (uiState as AuthUiState.Error).message
             }
             else -> {}
         }
@@ -133,6 +137,17 @@ fun LoginScreen(
                     onClick = { viewModel.login(username, password) },
                     enabled = uiState !is AuthUiState.Loading
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Simple feedback message
+                if (feedbackMessage != null) {
+                    Text(
+                        text = feedbackMessage!!,
+                        color = if (feedbackMessage == "Login successful") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 

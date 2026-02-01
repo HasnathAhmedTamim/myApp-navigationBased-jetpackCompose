@@ -33,14 +33,20 @@ fun SignupScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var validationError by remember { mutableStateOf<String?>(null) }
 
+    // Simple feedback: show a short Text for error or success
+    var feedbackMessage by remember { mutableStateOf<String?>(null) }
     val uiState by viewModel.uiState.collectAsState()
 
     // Handle UI State
     LaunchedEffect(uiState) {
         when (uiState) {
             is AuthUiState.SignupSuccess -> {
+                feedbackMessage = "Signup successful"
                 viewModel.resetUiState()
                 onSignupSuccess(phoneNumber)
+            }
+            is AuthUiState.Error -> {
+                feedbackMessage = (uiState as AuthUiState.Error).message
             }
             else -> {}
         }
@@ -217,6 +223,15 @@ fun SignupScreen(
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
                     }
+                }
+
+                // Simple feedback: show a short Text for error or success
+                if (feedbackMessage != null) {
+                    Text(
+                        text = feedbackMessage!!,
+                        color = if (feedbackMessage == "Signup successful") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
