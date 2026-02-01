@@ -91,6 +91,45 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun verifyUserCredentials(username: String, phoneNumber: String) {
+        viewModelScope.launch {
+            _uiState.update { AuthUiState.Loading }
+
+            // Validate inputs
+            val usernameValidation = com.example.myapp.util.ValidationUtil.validateUsername(username)
+            val phoneValidation = com.example.myapp.util.ValidationUtil.validatePhoneNumber(phoneNumber)
+
+            if (!usernameValidation.isValid) {
+                _uiState.update {
+                    AuthUiState.Error(usernameValidation.errorMessage ?: "Invalid username")
+                }
+                return@launch
+            }
+
+            if (!phoneValidation.isValid) {
+                _uiState.update {
+                    AuthUiState.Error(phoneValidation.errorMessage ?: "Invalid phone number")
+                }
+                return@launch
+            }
+
+            try {
+                val user = repository.getUserByUsernameAndPhone(username, phoneNumber)
+                _uiState.update {
+                    if (user != null) {
+                        AuthUiState.PhoneNumberFound(phoneNumber)
+                    } else {
+                        AuthUiState.Error("Username and phone number do not match our records")
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    AuthUiState.Error(e.message ?: "Error verifying credentials")
+                }
+            }
+        }
+    }
+
     fun verifyOtp(phoneNumber: String, otp: String) {
         viewModelScope.launch {
             _uiState.update { AuthUiState.Loading }

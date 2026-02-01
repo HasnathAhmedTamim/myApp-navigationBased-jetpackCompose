@@ -71,7 +71,7 @@ fun ForgotPasswordScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Enter your registered phone number to receive OTP",
+                    text = "Enter your username and registered phone number",
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -124,13 +124,13 @@ fun ForgotPasswordScreen(
                 // Send OTP Button
                 AuthButton(
                     text = "Send OTP",
-                    onClick = { onPhoneVerified(username, phoneNumber) },
+                    onClick = { viewModel.verifyUserCredentials(username, phoneNumber) },
                     enabled = uiState !is AuthUiState.Loading
                 )
             }
 
             if (uiState is AuthUiState.Loading) {
-                LoadingDialog("Verifying phone number...")
+                LoadingDialog("Verifying credentials...")
             }
         }
     }
